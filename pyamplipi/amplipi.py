@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from pyamplipi.client import Client
 from pyamplipi.models import Group, Stream, SourceUpdate, MultiZoneUpdate, ZoneUpdate, \
     GroupUpdate, StreamUpdate, Announcement, Status, Config, Info, Source, Zone, Preset, \
-    PresetUpdate, PlayMedia
+    PresetUpdate, PlayMedia, BrowsableItem, BrowsableItemResponse, BrowserSelection, PlayItemResponse
 
 
 json_ser_kwargs: Dict[str, Any] = dict(exclude_unset=True)
@@ -454,6 +454,55 @@ class AmpliPi:
         """
         response = await self._client.patch(f'streams/{stream_id}', update.model_dump_json(**json_ser_kwargs))
         return Status.model_validate(response)
+
+    async def browse_stream(self, stream_id: int, item: Optional[str] = None) -> List[BrowsableItem]:
+        """
+        Browse the media of a browsable stream (Pandora stations, media device files).
+
+        Streams that aren't browsable return 404, and unknown stream ids return 500; both raise APIError.
+
+        Args:
+            stream_id (int): The ID of the stream to browse.
+            item (Optional[str], optional): The item to browse into, e.g. '/media/USBStick/Music'.
+                Omit to browse the stream's root.
+
+        Returns:
+            List[BrowsableItem]: The items at that level.
+        """
+        body = BrowserSelection(item=item).model_dump_json(**json_ser_kwargs) if item is not None else None
+        response = await self._client.post(f'streams/browser/{stream_id}/browse', body)
+        return BrowsableItemResponse.model_validate(response).items
+
+    async def browse_stream_child(self, stream_id: int, parent_id: int) -> List[BrowsableItem]:
+        """
+        Browse the children of an item in a browsable stream.
+
+        Args:
+            stream_id (int): The ID of the stream to browse.
+            parent_id (int): The ID of the parent item to browse, 0 or greater.
+
+        Returns:
+            List[BrowsableItem]: The children of the parent item.
+        """
+        if parent_id < 0:
+            raise ValueError(f'parent_id must be 0 or greater, got {parent_id}')
+        response = await self._client.get(f'streams/{stream_id}/{parent_id}/browse')
+        return BrowsableItemResponse.model_validate(response).items
+
+    async def play_browsed_item(self, stream_id: int, item: str) -> PlayItemResponse:
+        """
+        Play an item from a browsable stream.
+
+        Args:
+            stream_id (int): The ID of the stream.
+            item (str): The ID of the item to play, as returned by browse_stream.
+
+        Returns:
+            PlayItemResponse: The directory the stream's browser is now in, and the new system status.
+        """
+        response = await self._client.post(f'streams/browser/{stream_id}/play',
+                                           BrowserSelection(item=item).model_dump_json(**json_ser_kwargs))
+        return PlayItemResponse.model_validate(response)
 
     # -- preset calls
     async def get_presets(self) -> List[Preset]:
