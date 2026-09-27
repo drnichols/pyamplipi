@@ -1,0 +1,53 @@
+pyamplipi package
+=================
+
+Submodules
+----------
+
+pyamplipi.amplipi module
+------------------------
+
+.. automodule:: pyamplipi.amplipi
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pyamplipi.client module
+-----------------------
+
+.. automodule:: pyamplipi.client
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pyamplipi.error module
+----------------------
+
+.. automodule:: pyamplipi.error
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pyamplipi.example module
+------------------------
+
+.. automodule:: pyamplipi.example
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pyamplipi.models module
+-----------------------
+
+.. automodule:: pyamplipi.models
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: pyamplipi
+   :members:
+   :show-inheritance:
+   :undoc-members:

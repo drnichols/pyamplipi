@@ -1,0 +1,484 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyamplipi.client &mdash; pyamplipi  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pyamplipi
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyamplipi</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyamplipi</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyamplipi.client</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyamplipi.client</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">http.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">responses</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">json.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONDecodeError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urljoin</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aiohttp</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClientSession</span><span class="p">,</span> <span class="n">ClientResponse</span><span class="p">,</span> <span class="n">ClientTimeout</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib3</span><span class="w"> </span><span class="kn">import</span> <span class="n">disable_warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib3.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">InsecureRequestWarning</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.error</span><span class="w"> </span><span class="kn">import</span> <span class="n">AccessDeniedError</span><span class="p">,</span> <span class="n">APIError</span><span class="p">,</span> <span class="n">AmpliPiUnreachableError</span>
+
+
+<div class="viewcode-block" id="headers_or_default">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.headers_or_default">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">headers_or_default</span><span class="p">(</span><span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create default headers for API requests or use provided headers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        headers (dict, optional): Custom headers to use. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Headers dictionary with content type and user agent set if none provided.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">'Accept-Content'</span><span class="p">:</span> <span class="s1">'application/json'</span><span class="p">,</span>
+            <span class="s1">'Content-Type'</span><span class="p">:</span> <span class="s1">'application/json'</span><span class="p">,</span>
+            <span class="s1">'User-Agent'</span><span class="p">:</span> <span class="s1">'pyamplipi-client'</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">headers</span></div>
+
+
+
+<div class="viewcode-block" id="Client">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Client</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Async HTTP client for interacting with the AmpliPi streaming device API.</span>
+
+<span class="sd">    This client handles all HTTP communication with an AmpliPi device, including</span>
+<span class="sd">    authentication, request formatting, and error handling.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        _endpoint (str): Base URL of the AmpliPi API</span>
+<span class="sd">        _timeout (int): Default timeout for API requests in seconds</span>
+<span class="sd">        _http_session (ClientSession): aiohttp session for making requests</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        endpoint (str): Base URL of the AmpliPi device API</span>
+<span class="sd">        timeout (int, optional): Request timeout in seconds. Defaults to 10.</span>
+<span class="sd">        http_session (ClientSession, optional): Existing aiohttp session to use. Defaults to None.</span>
+<span class="sd">        verify_ssl (bool, optional): Whether to verify SSL certificates. Defaults to False.</span>
+<span class="sd">        disable_insecure_warning (bool, optional): Whether to disable SSL warning messages. Defaults to True.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        ```python</span>
+<span class="sd">        client = Client("http://amplipi.local")</span>
+<span class="sd">        response = await client.get("status")</span>
+<span class="sd">        await client.close()</span>
+<span class="sd">        ```</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="Client.__init__">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="n">http_session</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClientSession</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">verify_ssl</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">disable_insecure_warning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">disable_insecure_warning</span><span class="p">:</span>
+            <span class="n">disable_warnings</span><span class="p">(</span><span class="n">InsecureRequestWarning</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_endpoint</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span> <span class="o">=</span> <span class="n">http_session</span> <span class="k">if</span> <span class="n">http_session</span> <span class="k">else</span> <span class="n">ClientSession</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span><span class="o">.</span><span class="n">verify</span> <span class="o">=</span> <span class="n">verify_ssl</span></div>
+
+
+<div class="viewcode-block" id="Client._timeout_or_self">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client._timeout_or_self">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_timeout_or_self</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get the appropriate timeout value.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            timeout (int, optional): Specific timeout value to use. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The provided timeout value or the default client timeout.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">timeout</span> <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span></div>
+
+
+<div class="viewcode-block" id="Client._parse_endpoint">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client._parse_endpoint">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_endpoint</span><span class="p">(</span><span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Ensure the API endpoint URL is properly formatted.</span>
+
+<span class="sd">        Adds '/api/' to the endpoint URL if not already present.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            endpoint (str): Base URL of the AmpliPi device</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Properly formatted API endpoint URL</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"api"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+            <span class="n">endpoint</span> <span class="o">+=</span> <span class="s2">"/api/"</span>
+        <span class="k">elif</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"api"</span><span class="p">):</span>
+            <span class="n">endpoint</span> <span class="o">+=</span> <span class="s2">"/"</span>
+        <span class="k">elif</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"api/"</span><span class="p">):</span>
+            <span class="n">endpoint</span> <span class="o">+=</span> <span class="s2">"api/"</span>
+
+        <span class="k">return</span> <span class="n">endpoint</span></div>
+
+
+<div class="viewcode-block" id="Client._handle_error">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client._handle_error">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_handle_error</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">ClientResponse</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Handle error responses from the API.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            response (ClientResponse): The error response from the API</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            APIError: For general API errors including 404</span>
+<span class="sd">            AccessDeniedError: For authentication/authorization errors (401/403)</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">APIError</span><span class="p">(</span>
+                <span class="s2">"The url </span><span class="si">{}</span><span class="s2"> returned error 404"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">or</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">403</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response_json</span> <span class="o">=</span> <span class="k">await</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">AccessDeniedError</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">AccessDeniedError</span><span class="p">(</span>
+                    <span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">response_json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"error"</span><span class="p">),</span>
+                    <span class="n">response_json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">APIError</span><span class="p">(</span>
+                <span class="s2">"API returned status code '</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">' with body: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                    <span class="n">responses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">),</span>
+                    <span class="n">body</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">APIError</span><span class="p">(</span>
+                <span class="s2">"API returned status code '</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">' "</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">responses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client._write_response">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client._write_response">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_write_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">ClientResponse</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Write API response to a file or stdout.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            response (ClientResponse): The API response to write</span>
+<span class="sd">            outfile (str, optional): Path to output file. If None, writes to stdout. Defaults to None.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            APIError: If response indicates an error or if binary content would be written to stdout</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="k">await</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctype</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'content-type'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ctype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ctype</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'text/'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ctype</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'application/json'</span><span class="p">,</span> <span class="p">)):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"we think it is ok to write "</span><span class="p">,</span> <span class="n">ctype</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">((</span><span class="k">await</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">'utf-8'</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">APIError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No output file provided. Content of type </span><span class="si">{</span><span class="n">ctype</span><span class="si">}</span><span class="s2"> will not be written to terminal/stdout"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client._process_response">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client._process_response">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_process_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">ClientResponse</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Process JSON response from the API.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            response (ClientResponse): The API response to process</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Parsed JSON response data</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            APIError: If response indicates an error or JSON parsing fails</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response_json</span> <span class="o">=</span> <span class="k">await</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">JSONDecodeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">APIError</span><span class="p">(</span>
+                <span class="s2">"Error while decoding json of response: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">response_json</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="c1"># Newer versions of the powerwall do not return such values anymore</span>
+        <span class="c1"># Kept for backwards compability or if the API changes again</span>
+        <span class="k">if</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="n">response_json</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">APIError</span><span class="p">(</span><span class="n">response_json</span><span class="p">[</span><span class="s2">"error"</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">response_json</span></div>
+
+
+<div class="viewcode-block" id="Client.url">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.url">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build a full API URL from a path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): API endpoint path</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Complete API URL</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">urljoin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.delete">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.delete">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send DELETE request to the API.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): API endpoint path</span>
+<span class="sd">            body (Any, optional): Request body data. Defaults to None.</span>
+<span class="sd">            headers (dict, optional): Custom request headers. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Parsed JSON response data</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            AmpliPiUnreachableError: If connection fails</span>
+<span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">ClientTimeout</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">),</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="n">headers_or_default</span><span class="p">(</span><span class="n">headers</span><span class="p">),</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AmpliPiUnreachableError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.patch">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.patch">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send PATCH request to the API.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): API endpoint path</span>
+<span class="sd">            body (Any, optional): Request body data. Defaults to None.</span>
+<span class="sd">            headers (dict, optional): Custom request headers. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Parsed JSON response data</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            AmpliPiUnreachableError: If connection fails</span>
+<span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">ClientTimeout</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">),</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="n">headers_or_default</span><span class="p">(</span><span class="n">headers</span><span class="p">),</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AmpliPiUnreachableError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.post">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.post">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send POST request to the API.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): API endpoint path</span>
+<span class="sd">            body (Any, optional): Request body data. Defaults to None.</span>
+<span class="sd">            headers (dict, optional): Custom request headers. Defaults to None.</span>
+<span class="sd">            timeout (int, optional): Request timeout override. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Parsed JSON response data</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            AmpliPiUnreachableError: If connection fails</span>
+<span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">ClientTimeout</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout_or_self</span><span class="p">(</span><span class="n">timeout</span><span class="p">)),</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="n">headers_or_default</span><span class="p">(</span><span class="n">headers</span><span class="p">),</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AmpliPiUnreachableError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.get">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.get">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expect_json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send GET request to the API.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): API endpoint path</span>
+<span class="sd">            headers (dict, optional): Custom request headers. Defaults to None.</span>
+<span class="sd">            expect_json (bool, optional): Whether to expect and parse JSON response. Defaults to True.</span>
+<span class="sd">            outfile (str, optional): Path to save response content. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Parsed JSON response data if expect_json=True, empty dict otherwise</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            AmpliPiUnreachableError: If connection fails</span>
+<span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">ClientTimeout</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">),</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="n">headers_or_default</span><span class="p">(</span><span class="n">headers</span><span class="p">),</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">expect_json</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">except</span> <span class="p">(</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span>
+                <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ReadTimeout</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AmpliPiUnreachableError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.close">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.client.Client.close">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Close the HTTP session.</span>
+
+<span class="sd">        This should be called when the client is no longer needed to clean up resources.</span>
+<span class="sd">        Required for testing to avoid warnings about unclosed resources.</span>
+<span class="sd">        """</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_http_session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

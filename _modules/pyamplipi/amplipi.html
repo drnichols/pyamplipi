@@ -1,0 +1,867 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyamplipi.amplipi &mdash; pyamplipi  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pyamplipi
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyamplipi</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyamplipi</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyamplipi.amplipi</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyamplipi.amplipi</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""A class for interacting with AmpliPi</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">aiohttp</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClientSession</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyamplipi.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyamplipi.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Group</span><span class="p">,</span> <span class="n">Stream</span><span class="p">,</span> <span class="n">SourceUpdate</span><span class="p">,</span> <span class="n">MultiZoneUpdate</span><span class="p">,</span> <span class="n">ZoneUpdate</span><span class="p">,</span> \
+    <span class="n">GroupUpdate</span><span class="p">,</span> <span class="n">StreamUpdate</span><span class="p">,</span> <span class="n">Announcement</span><span class="p">,</span> <span class="n">Status</span><span class="p">,</span> <span class="n">Config</span><span class="p">,</span> <span class="n">Info</span><span class="p">,</span> <span class="n">Source</span><span class="p">,</span> <span class="n">Zone</span><span class="p">,</span> <span class="n">Preset</span><span class="p">,</span> \
+    <span class="n">PresetUpdate</span><span class="p">,</span> <span class="n">PlayMedia</span><span class="p">,</span> <span class="n">BrowsableItem</span><span class="p">,</span> <span class="n">BrowsableItemResponse</span><span class="p">,</span> <span class="n">BrowserSelection</span><span class="p">,</span> <span class="n">PlayItemResponse</span>
+
+
+<span class="n">json_ser_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># play_media functionality added in 0.4.1</span>
+<span class="n">MIN_MEDIA_PLAYER_VERSION</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AmpliPi">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AmpliPi</span><span class="p">:</span>
+<div class="viewcode-block" id="AmpliPi.__init__">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="n">http_session</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClientSession</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">verify_ssl</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">disable_insecure_warning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Initialize the AmpliPi client.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            endpoint (str): The API endpoint for the AmpliPi system.</span>
+<span class="sd">            timeout (int, optional): The timeout for HTTP requests. Defaults to 10 seconds.</span>
+<span class="sd">            http_session (Optional[ClientSession], optional): An optional aiohttp ClientSession.</span>
+<span class="sd">            verify_ssl (bool, optional): Whether to verify SSL certificates. Defaults to False.</span>
+<span class="sd">            disable_insecure_warning (bool, optional): Whether to disable insecure request warnings. Defaults to True.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span>
+            <span class="n">endpoint</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="p">,</span>
+            <span class="n">http_session</span><span class="p">,</span>
+            <span class="n">verify_ssl</span><span class="p">,</span>
+            <span class="n">disable_insecure_warning</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="c1"># -- status calls</span>
+<div class="viewcode-block" id="AmpliPi.get_status">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_status">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve the current status of the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The current status of the system.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.load_config">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.load_config">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Load a specified configuration into the AmpliPi system.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (Config): The configuration to load.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the load operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'load'</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.factory_reset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.factory_reset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">factory_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Perform a factory reset of the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the factory reset operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'factory_reset'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.system_reset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.system_reset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">system_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Reset the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the system reset operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'reset'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.system_reboot">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.system_reboot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">system_reboot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Reboot the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the reboot operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'reboot'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.system_shutdown">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.system_shutdown">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">system_shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Shut down the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the shutdown operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'shutdown'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_info">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_info">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Info</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve general information about the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Info: Information about the system.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'info'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Info</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_version">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_version">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Get the current version of the AmpliPi system.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[int, ...]: A tuple representing the version number.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+
+        <span class="n">info</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_info</span><span class="p">()</span>
+        <span class="n">version_raw</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">version</span>
+        <span class="n">version_nums</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">version_raw</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ch</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="p">(</span><span class="n">tmp</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">version_nums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">version_nums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">version_nums</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span></div>
+
+
+    <span class="c1"># -- source calls</span>
+<div class="viewcode-block" id="AmpliPi.get_sources">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_sources">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve a list of available audio sources.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Source]: A list of available sources.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'sources'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Source</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">'sources'</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_source">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_source">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve details of a specific audio source.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source_id (int): The ID of the source to retrieve.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Source: The details of the specified source.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'sources/</span><span class="si">{</span><span class="n">source_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Source</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">from_attributes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.set_source">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.set_source">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">source_update</span><span class="p">:</span> <span class="n">SourceUpdate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update details of a specific audio source.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source_id (int): The ID of the source to update.</span>
+<span class="sd">            source_update (SourceUpdate): The update details for the source.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the update operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="sa">f</span><span class="s1">'sources/</span><span class="si">{</span><span class="n">source_id</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">source_update</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_source_img">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_source_img">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_source_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve an image for a specific audio source.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source_id (int): The ID of the source.</span>
+<span class="sd">            height (int): The desired height of the image.</span>
+<span class="sd">            outfile (Optional[str], optional): Optional path to save the image.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        """</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'sources/</span><span class="si">{</span><span class="n">source_id</span><span class="si">}</span><span class="s1">/image/</span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">expect_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="n">outfile</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+    <span class="c1"># -- zone calls</span>
+<div class="viewcode-block" id="AmpliPi.get_zone">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_zone">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Zone</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve details of a specific zone.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            zone_id (int): The ID of the zone to retrieve.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Zone: The details of the specified zone.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'zones/</span><span class="si">{</span><span class="n">zone_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Zone</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_zones">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_zones">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_zones</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Zone</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve a list of available zones.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Zone]: A list of available zones.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'zones'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">zone</span><span class="p">)</span> <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">'zones'</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.set_zones">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.set_zones">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_zones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zone_update</span><span class="p">:</span> <span class="n">MultiZoneUpdate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update details of multiple zones.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            zone_update (MultiZoneUpdate): The update details for the zones.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the update operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">'zones'</span><span class="p">,</span> <span class="n">zone_update</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.set_zone">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.set_zone">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zone_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">zone_update</span><span class="p">:</span> <span class="n">ZoneUpdate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update details of a specific zone.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            zone_id (int): The ID of the zone to update.</span>
+<span class="sd">            zone_update (ZoneUpdate): The update details for the zone.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the update operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="sa">f</span><span class="s1">'zones/</span><span class="si">{</span><span class="n">zone_id</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span>
+                                            <span class="n">zone_update</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- group calls</span>
+<div class="viewcode-block" id="AmpliPi.create_group">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.create_group">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_group</span><span class="p">:</span> <span class="n">Group</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Create a new group.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_group (Group): The details of the new group.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Group: The created group.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'group'</span><span class="p">,</span> <span class="n">new_group</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Group</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_groups">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_groups">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Group</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve a list of available groups.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Group]: A list of available groups.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'groups'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Group</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">'groups'</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_group">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_group">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Group</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve details of a specific group.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group_id: The ID of the group to retrieve.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Group: The details of the specified group.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'groups/</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Group</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.delete_group">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.delete_group">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Delete a specific group.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group_id: The ID of the group to delete.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the delete operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="sa">f</span><span class="s1">'groups/</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.set_group">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.set_group">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">update</span><span class="p">:</span> <span class="n">GroupUpdate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update details of a specific group.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group_id: The ID of the group to update.</span>
+<span class="sd">            update (GroupUpdate): The update details for the group.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the update operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="sa">f</span><span class="s1">'groups/</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">update</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- stream calls</span>
+<div class="viewcode-block" id="AmpliPi.get_streams">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_streams">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_streams</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Stream</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve a list of available streams.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Stream]: A list of available streams.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'streams'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Stream</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span> <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">'streams'</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve details of a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to retrieve.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Stream: The details of the specified stream.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Stream</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.play_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.play_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">play_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Play a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to play.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the play operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/play'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.pause_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.pause_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">pause_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Pause a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to pause.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the pause operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/pause'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.previous_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.previous_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">previous_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Play the previous stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the current stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the previous stream operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/prev'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.next_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.next_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">next_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Play the next stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the current stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the next stream operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/next'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.stop_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.stop_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stop_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Stop a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to stop.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the stop operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/stop'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.station_change_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.station_change_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">station_change_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">station</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Change the station of a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to change.</span>
+<span class="sd">            station (int): The new station ID.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the station change operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/station=</span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.create_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.create_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Create a new stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_stream (Stream): The details of the new stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the create operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'stream'</span><span class="p">,</span> <span class="n">new_stream</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.delete_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.delete_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Delete a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to delete.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the delete operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.set_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.set_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">update</span><span class="p">:</span> <span class="n">StreamUpdate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update details of a specific stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to update.</span>
+<span class="sd">            update (StreamUpdate): The update details for the stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the update operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">update</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.browse_stream">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.browse_stream">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">browse_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BrowsableItem</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Browse the media of a browsable stream (Pandora stations, media device files).</span>
+
+<span class="sd">        Streams that aren't browsable return 404, and unknown stream ids return 500; both raise APIError.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to browse.</span>
+<span class="sd">            item (Optional[str], optional): The item to browse into, e.g. '/media/USBStick/Music'.</span>
+<span class="sd">                Omit to browse the stream's root.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[BrowsableItem]: The items at that level.</span>
+<span class="sd">        """</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">BrowserSelection</span><span class="p">(</span><span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/browser/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/browse'</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BrowsableItemResponse</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span><span class="o">.</span><span class="n">items</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.browse_stream_child">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.browse_stream_child">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">browse_stream_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BrowsableItem</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Browse the children of an item in a browsable stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream to browse.</span>
+<span class="sd">            parent_id (int): The ID of the parent item to browse, 0 or greater.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[BrowsableItem]: The children of the parent item.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">parent_id</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'parent_id must be 0 or greater, got </span><span class="si">{</span><span class="n">parent_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">parent_id</span><span class="si">}</span><span class="s1">/browse'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BrowsableItemResponse</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span><span class="o">.</span><span class="n">items</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.play_browsed_item">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.play_browsed_item">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">play_browsed_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlayItemResponse</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Play an item from a browsable stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream_id (int): The ID of the stream.</span>
+<span class="sd">            item (str): The ID of the item to play, as returned by browse_stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            PlayItemResponse: The directory the stream's browser is now in, and the new system status.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'streams/browser/</span><span class="si">{</span><span class="n">stream_id</span><span class="si">}</span><span class="s1">/play'</span><span class="p">,</span>
+                                           <span class="n">BrowserSelection</span><span class="p">(</span><span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">PlayItemResponse</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- preset calls</span>
+<div class="viewcode-block" id="AmpliPi.get_presets">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_presets">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_presets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Preset</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve a list of available presets.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Preset]: A list of available presets.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'presets'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Preset</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">preset</span><span class="p">)</span> <span class="k">for</span> <span class="n">preset</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s1">'presets'</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.get_preset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.get_preset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_preset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Preset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve details of a specific preset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            preset_id (int): The ID of the preset to retrieve.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Preset: The details of the specified preset.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">'presets/</span><span class="si">{</span><span class="n">preset_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Preset</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.set_preset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.set_preset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_preset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">update</span><span class="p">:</span> <span class="n">PresetUpdate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Update details of a specific preset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            preset_id (int): The ID of the preset to update.</span>
+<span class="sd">            update (PresetUpdate): The update details for the preset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the update operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="sa">f</span><span class="s1">'presets/</span><span class="si">{</span><span class="n">preset_id</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">update</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.create_preset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.create_preset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_preset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Preset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Create a new preset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_preset (Preset): The details of the new preset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Preset: The created preset.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'preset'</span><span class="p">,</span> <span class="n">new_preset</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Preset</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.delete_preset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.delete_preset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_preset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Delete a specific preset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            preset_id (int): The ID of the preset to delete.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the delete operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="sa">f</span><span class="s1">'presets/</span><span class="si">{</span><span class="n">preset_id</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AmpliPi.load_preset">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.load_preset">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load_preset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preset_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Load a specific preset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            preset_id (int): The ID of the preset to load.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the load operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s1">'presets/</span><span class="si">{</span><span class="n">preset_id</span><span class="si">}</span><span class="s1">/load'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- anounce call</span>
+<div class="viewcode-block" id="AmpliPi.announce">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.announce">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">announce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">announcement</span><span class="p">:</span> <span class="n">Announcement</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Announce a message using the AmpliPi system.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            announcement (Announcement): The announcement details.</span>
+<span class="sd">            timeout (int, optional): Optional timeout for the announcement.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the announcement operation.</span>
+<span class="sd">        """</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'announce'</span><span class="p">,</span> <span class="n">announcement</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- play media call</span>
+<div class="viewcode-block" id="AmpliPi.play_media">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.play_media">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">play_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">media</span><span class="p">:</span> <span class="n">PlayMedia</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Play a specific media file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            media (PlayMedia): The media details to play.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Status: The status of the play operation.</span>
+<span class="sd">        """</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="n">MIN_MEDIA_PLAYER_VERSION</span><span class="p">:</span>  <span class="c1"># TOO OLD, USE ANNOUNCEMENT</span>
+            <span class="n">announce</span> <span class="o">=</span> <span class="n">Announcement</span><span class="p">(</span><span class="n">media</span><span class="o">=</span><span class="n">media</span><span class="o">.</span><span class="n">media</span><span class="p">,</span>
+                                    <span class="n">source_id</span><span class="o">=</span><span class="n">media</span><span class="o">.</span><span class="n">source_id</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'announce'</span><span class="p">,</span> <span class="n">announce</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'play'</span><span class="p">,</span> <span class="n">media</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="o">**</span><span class="n">json_ser_kwargs</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">Status</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- client control</span>
+<div class="viewcode-block" id="AmpliPi.close">
+<a class="viewcode-back" href="../../pyamplipi.html#pyamplipi.amplipi.AmpliPi.close">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Close the AmpliPi client session.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        """</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
