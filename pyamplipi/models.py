@@ -153,6 +153,14 @@ class Stream(BaseModel):
     freq: Optional[str] = None
     client_id: Optional[str] = None
     token: Optional[str] = None
+    server: Optional[str] = None
+    index: Optional[int] = None  # RCA index
+    disabled: Optional[bool] = None  # soft disabled, not shown as a selectable option
+    ap2: Optional[bool] = None  # AirPlay2 stream
+    port: Optional[int] = None  # LMS metadata port
+    browsable: Optional[bool] = None
+    temporary: Optional[bool] = None  # removed once disconnected from all sources
+    has_pause: Optional[bool] = None
 
 
 class StreamUpdate(BaseModel):
@@ -164,6 +172,13 @@ class StreamUpdate(BaseModel):
     url: Optional[str] = None
     logo: Optional[str] = None
     freq: Optional[str] = None
+    server: Optional[str] = None
+    ap2: Optional[bool] = None
+    disabled: Optional[bool] = None
+    port: Optional[int] = None
+    temporary: Optional[bool] = None
+    timeout: Optional[str] = None
+    has_pause: Optional[bool] = None
 
 
 class BrowsableItem(BaseModel):
